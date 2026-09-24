@@ -1,0 +1,202 @@
+AI PHOTO COACH — DEVELOPMENT PIPELINE
+======================================
+
+SECTION 1 — ENVIRONMENT & REPO SETUP
+------------------------------------
+- Create a Python virtual environment
+- Install dependencies:
+  • OpenCV
+  • MediaPipe
+  • PyTorch
+  • Streamlit
+  • scikit-learn
+  • ONNX Runtime
+- Initialize GitHub repo with folder structure:
+  • src/ (CV + model code)
+  • app/ (UI)
+  • configs/
+  • tests/
+  • .github/workflows/
+- Set branch rules: main protected, all work on feature/* branches, merge via PR only
+- Add .gitignore (exclude datasets, checkpoints, venv)
+- Add starter README.md
+
+SECTION 2 — DATA COLLECTION & PREPARATION
+-----------------------------------------
+- Shoot a small personal test set (20–30 photos) across different lighting, angles, and backgrounds
+- Use this for sanity-checking every module
+- Download AVA dataset for aesthetic training (don't commit to git)
+- Write prepare_data.py script that splits AVA into train/val/test manifests
+
+SECTION 3 — CORE COMPUTER VISION MODULE
+---------------------------------------
+- Integrate MediaPipe Face Landmarker for face + landmark detection
+- Compute yaw/pitch/roll from landmark geometry
+- Compute face position and framing within the camera frame
+- Test against Section 2 photo set
+- Output should produce sensible "turn left / move back" style guidance
+
+SECTION 4 — TECHNICAL QUALITY METRICS
+-------------------------------------
+- Sharpness/blur detection via Laplacian variance
+- Brightness/exposure via histogram stats
+- Combine into a single technical sub-score
+- Pure OpenCV implementation — no deep learning
+- Complete this BEFORE moving to Section 5
+
+SECTION 5 — AESTHETIC MODEL (THE ONE MODEL YOU TRAIN)
+-----------------------------------------------------
+- Build MobileNetV3 backbone with 10-bucket NIMA head
+- Train with EMD loss on AVA dataset
+  • Freeze backbone for first few epochs
+  • Fine-tune end-to-end after
+- Evaluate with SRCC/PLCC against AVA test split
+- Export trained checkpoint to ONNX for fast inference
+
+NOTES:
+- Consider MobileNetV3-Large or EfficientNet-B0 for better accuracy
+- MobileNetV3-Small: ~0.60 SRCC on AVA
+- MobileNetV3-Large: ~0.68 SRCC on AVA
+- AVA is large (1.2M images) — consider starting with smaller subset
+
+SECTION 6 — SCORE FUSION & FEEDBACK ENGINE
+------------------------------------------
+- Combine Section 4 technical score and Section 5 aesthetic score into weighted Photo Readiness Score
+- Generate rule-based feedback strings:
+  • "Lighting is low"
+  • "Hold still"
+  • "Move slightly left"
+- Make weights configurable via YAML/JSON:
+
+  score_weights:
+    technical:
+      sharpness: 0.25
+      exposure: 0.20
+      lighting: 0.15
+    aesthetic: 0.40
+
+- This is the seam everything else plugs into — get it solid before adding UI
+
+SECTION 7 — MVP PROTOTYPE (STREAMLIT)
+-------------------------------------
+- Wire camera input / file upload → Sections 3–6 → on-screen feedback
+- Single Streamlit app
+- Get full loop working end-to-end on your own face
+- FIRST DEMOABLE MILESTONE — resist adding features before this works
+
+SECTION 8 — AESTHETIC STYLES & PERSONALIZATION
+----------------------------------------------
+- Add purpose-based modes (LinkedIn / Instagram / Passport) that reweight the fusion score
+- Build "learn my best angle":
+  • Lightweight regression over user's accumulated yaw/pitch/lighting/score history
+  • NOT deep learning — too little per-user data
+- Cold-start solution:
+  • Fall back to general best practices (front-facing, even lighting, centered) for first 20–30 photos
+  • Gradually blend in personalized guidance once threshold reached
+
+SECTION 9 — CI/CD & DEPLOYMENT
+------------------------------
+CI Pipeline (ci.yml):
+- On every PR: run lint (ruff) + unit tests (pytest)
+- Quality gate before merge
+
+Model Management:
+- NEVER commit model weights to git
+- Publish exported ONNX file as GitHub Release asset
+
+CD Pipeline (cd.yml):
+- On version tag (vX.Y.Z):
+  • Pull release model artifact
+  • Build Docker image
+  • Push to GHCR
+  • Deploy to chosen host
+
+SECTION 10 — STRETCH FEATURES (ONLY AFTER SECTIONS 1–9 WORK END-TO-END)
+-----------------------------------------------------------------------
+- Group/multi-person mode
+- Video/reel readiness
+- Golden-hour timing suggestions
+- Instant export presets
+- Bias/fairness audit across skin tones and lighting conditions
+- Accessibility (audio-only) mode
+- Production migration: FastAPI + React (beyond Streamlit demo)
+
+======================================
+ADDITIONAL NOTES
+======================================
+
+EVALUATION HARNESS
+------------------
+- Create small labeled test set (50–100 photos manually scored 1–10)
+- Correlate pipeline's final output against human judgment
+- Catches case where technical + aesthetic scores don't combine meaningfully
+
+LOGGING FOR LIVE ASSISTANT
+--------------------------
+- Log each frame's subscores and feedback given during live camera mode
+- Helps debug "why did it say move left?"
+- Useful data for personalization layer later
+
+VISUAL DEBUGGING TOOL
+---------------------
+- Streamlit page showing:
+  • Landmark overlay
+  • Lighting heatmap
+  • Score breakdown side-by-side
+- Useful for development and makes great thesis figure
+
+LIVE CAMERA PERFORMANCE
+-----------------------
+Hardest technical challenge: 30fps with MediaPipe + aesthetic model running together
+
+If latency issues:
+- Run MediaPipe on CPU, aesthetic model on GPU
+- Quantize ONNX model to int8
+- Skip frames (process every 3rd frame, interpolate guidance)
+
+TEST THIS EARLY — during Section 3, not Section 7
+
+======================================
+FEATURE SUMMARY (5 PILLARS)
+======================================
+
+1. PHOTO ANALYSIS
+   Upload → analyze → feedback
+
+2. PHOTO RANKING
+   Upload multiple → compare → identify strongest shot
+
+3. AESTHETIC INTELLIGENCE
+   Composition + color + lighting style + background + visual balance
+
+4. LIVE AI CAMERA ASSISTANT
+   Real-time guidance:
+   • Move left
+   • Lift chin
+   • Move closer
+   • Better lighting
+   • Hold still
+   • Auto capture
+
+5. PERSONALIZATION
+   AI learns: "What kind of photos work best for you?"
+
+======================================
+POSITIONING
+======================================
+
+Project Title:
+"AI Photo Coach — Real-Time Intelligent Photography Assistant"
+
+Description:
+"An AI-powered computer vision system that analyzes facial pose, lighting,
+composition, sharpness, and framing to provide real-time photography guidance
+and rank captured images based on configurable photo-quality criteria."
+
+Resume Bullet (after implementation):
+"Implemented real-time facial landmark tracking and head-pose estimation to
+provide live camera instructions and automated photo-capture recommendations."
+
+======================================
+END OF PIPELINE DOCUMENT
+======================================

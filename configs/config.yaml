@@ -1,0 +1,66 @@
+# Score weights for photo quality assessment
+score_weights:
+  technical:
+    sharpness: 0.25
+    exposure: 0.20
+    lighting: 0.15
+    face_position: 0.15
+  aesthetic: 0.25
+
+# Face detection thresholds
+face_detection:
+  min_confidence: 0.7
+  min_face_size: 100  # pixels
+
+# Head pose thresholds (degrees)
+head_pose:
+  yaw_threshold: 15      # left/right
+  pitch_threshold: 10    # up/down
+  roll_threshold: 8      # tilt
+
+# Lighting thresholds
+lighting:
+  min_brightness: 40
+  max_brightness: 220
+  optimal_brightness: 120
+
+# Sharpness threshold (Laplacian variance)
+sharpness:
+  blur_threshold: 20
+  face_blur_threshold: 15
+
+# Photo readiness threshold for auto-capture
+readiness_threshold: 85
+
+# Purpose-based mode presets
+modes:
+  linkedin:
+    face_position: 0.30
+    sharpness: 0.25
+    lighting: 0.25
+    aesthetic: 0.20
+  instagram:
+    aesthetic: 0.40
+    composition: 0.25
+    lighting: 0.20
+    face_position: 0.15
+  passport:
+    face_position: 0.35
+    lighting: 0.30
+    sharpness: 0.25
+    background: 0.10
+
+# Personalization settings
+personalization:
+  min_photos_for_learning: 20
+  learning_rate: 0.01
+
+# Camera settings
+camera:
+  target_fps: 30
+  process_every_n_frames: 3  # Process every 3rd frame for performance
+
+# Logging
+logging:
+  level: INFO
+  save_frame_data: true
